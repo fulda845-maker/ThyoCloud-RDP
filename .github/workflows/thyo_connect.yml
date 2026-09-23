@@ -1,57 +1,44 @@
-name: ThyoCloud Personal RDP (Fork)
+name: RDP Direct Ngrok
 
 on:
   workflow_dispatch:
-    inputs:
-      osChoice:
-        description: 'Pilih Versi Windows Server'
-        required: true
-        type: choice
-        default: 'windows-2022'
-        options:
-          - windows-latest
-          - windows-2025
-          - windows-2022
-      userEmail:
-        description: 'Email yang terdaftar di Web ThyoCloud'
-        required: true
-      customUsername:
-        description: 'Username RDP (Opsional - Default: thyocloud)'
-        required: false
-        default: 'thyocloud'
 
 jobs:
   build-rdp:
-    runs-on: ${{ github.event.inputs.osChoice }}
-    timeout-minutes: 360
-
+    runs-on: windows-latest
     steps:
-      - name: 🚀 Menghubungkan ke ThyoCloud Server Web
-        env:
-          EMAIL: ${{ github.event.inputs.userEmail }}
-          USER: ${{ github.event.inputs.customUsername }}
-          REPO: ${{ github.event.repository.name }}
-          OS_TYPE: ${{ github.event.inputs.osChoice }}
+      - name: Activer le bureau a distance (RDP)
         run: |
-          Write-Host "Sistem Operasi Terpilih: $env:OS_TYPE"
-          Write-Host "Verifikasi Email ke ThyoCloud..."
-          
-          $webUrl = "https://thyo.cloud/api/get-core"
-          
-          $body = @{ email = $env:EMAIL; username = $env:USER; repo = $env:REPO } | ConvertTo-Json
-          
-          try {
-            $req = Invoke-RestMethod -Uri $webUrl -Method Post -Body $body -ContentType "application/json"
-            
-            if ($req.success -eq $true) {
-              Write-Host "✅ Akses Diterima! Menjalankan Core Engine..."
-              Invoke-Expression $req.script
-            } else {
-              Write-Host "⛔ GAGAL: $($req.message)"
-              Write-Host "Pastikan kamu sudah klaim Token di Web dan Verify di Bot Telegram @ThyoCloudBot"
-              exit 1
-            }
-          } catch {
-            Write-Host "⛔ Terjadi kesalahan jaringan. Coba lagi nanti."
-            exit 1
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+      - name: Creer l'utilisateur Administrateur
+        run: |
+          net user Administrateur MonPassRDPSecure2026! /add
+          net localgroup Administrateurs Administrateur /add
+
+      - name: Installer et configurer Ngrok
+        env:
+          NGROK_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+        run: |
+          Invoke-WebRequest -Uri "https://bin.equinox.io/c/b3M4122dNVx/ngrok-v3-stable-windows-amd64.zip" -OutFile "ngrok.zip"
+          Expand-Archive -Path "ngrok.zip" -DestinationPath "."
+          .\ngrok.exe authtoken $env:NGROK_TOKEN
+          cmd /c start .\ngrok.exe tcp 3389
+
+      - name: Recuperer l'adresse IP/Port Ngrok
+        run: |
+          Start-Sleep -Seconds 5
+          $response = Invoke-RestMethod -Uri http://127.0.0.1:4040/api/tunnels
+          $publicUrl = $response.tunnels[0].public_url
+          Write-Host "=========================================="
+          Write-Host "VOTRE ADRESSE RDP : $publicUrl"
+          Write-Host "=========================================="
+
+      - name: Maintien du serveur actif (6h)
+        run: |
+          $i = 0
+          while ($i -lt 360) {
+            Start-Sleep -Seconds 60
+            $i++
           }
