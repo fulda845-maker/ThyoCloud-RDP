@@ -20,7 +20,7 @@ jobs:
       - name: Lancer le tunnel TCP Pinggy
         run: |
           ssh -o StrictHostKeyChecking=no -p 443 -R 0:localhost:3389 tcp@a.pinggy.io > pinggy.log 2>&1 &
-          Start-Sleep -Seconds 10
+          Start-Sleep -Seconds 15
           Get-Content pinggy.log
 
       - name: Maintien du serveur actif (6h)
