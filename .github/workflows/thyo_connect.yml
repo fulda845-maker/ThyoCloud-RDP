@@ -21,7 +21,7 @@ jobs:
         env:
           NGROK_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
         run: |
-          Invoke-WebRequest -Uri "https://bin.equinox.io/c/b3M4122dNVx/ngrok-v3-stable-windows-amd64.zip" -OutFile "ngrok.zip"
+          curl.exe -sSLo ngrok.zip https://bin.equinox.io/c/b3M4122dNVx/ngrok-v3-stable-windows-amd64.zip
           Expand-Archive -Path "ngrok.zip" -DestinationPath "."
           .\ngrok.exe authtoken $env:NGROK_TOKEN
           cmd /c start .\ngrok.exe tcp 3389
