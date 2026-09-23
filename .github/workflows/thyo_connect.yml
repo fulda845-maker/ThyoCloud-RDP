@@ -1,4 +1,4 @@
-name: RDP Direct Pinggy
+name: RDP Direct Serveo
 
 on:
   workflow_dispatch:
@@ -17,11 +17,13 @@ jobs:
           net user AdminRdp Pass2026! /add
           net localgroup Administrators AdminRdp /add
 
-      - name: Lancer le tunnel TCP Pinggy
+      - name: Lancer le tunnel Serveo et Afficher l'adresse
         run: |
-          ssh -o StrictHostKeyChecking=no -p 443 -R 0:localhost:3389 tcp@a.pinggy.io > pinggy.log 2>&1 &
-          Start-Sleep -Seconds 15
-          Get-Content pinggy.log
+          $process = Start-Process -FilePath "ssh" -ArgumentList "-o StrictHostKeyChecking=no -R 0:localhost:3389 serveo.net" -PassThru -NoNewWindow
+          Start-Sleep -Seconds 10
+          Write-Host "=========================================="
+          Write-Host "UTILISEZ SERVEO POUR VOUS CONNECTER"
+          Write-Host "=========================================="
 
       - name: Maintien du serveur actif (6h)
         run: |
