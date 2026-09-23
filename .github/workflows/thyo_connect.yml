@@ -16,7 +16,6 @@ jobs:
         run: |
           net user AdminRdp Pass2026! /add
           net localgroup Administrators AdminRdp /add
-          net localgroup Administrateurs AdminRdp /add
 
       - name: Installer et configurer Ngrok
         env:
