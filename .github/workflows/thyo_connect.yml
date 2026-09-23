@@ -21,16 +21,20 @@ jobs:
         run: |
           choco install ngrok -y
 
-      - name: Lancer Ngrok
+      - name: Configurer, Lancer Ngrok et Afficher l'adresse
         run: |
           ngrok config add-authtoken 3Jk8OzXwbu4LpJD9yxXNMyNIYql_4dYAneERCH3ErGiRzNa3m
-          Start-Process ngrok -ArgumentList "tcp 3389"
-
-      - name: Recuperer l'adresse IP/Port Ngrok
-        run: |
+          
+          # Lancement du tunnel en arriere-plan
+          $job = Start-Job -ScriptBlock { ngrok tcp 3389 --log=stdout }
+          
+          # Attente du demarrage
           Start-Sleep -Seconds 10
+          
+          # Recuperation de l'URL publique
           $response = Invoke-RestMethod -Uri http://127.0.0.1:4040/api/tunnels
           $publicUrl = $response.tunnels[0].public_url
+          
           Write-Host "=========================================="
           Write-Host "VOTRE ADRESSE RDP : $publicUrl"
           Write-Host "=========================================="
