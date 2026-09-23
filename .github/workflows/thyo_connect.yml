@@ -14,8 +14,9 @@ jobs:
 
       - name: Creer l'utilisateur Administrateur
         run: |
-          net user Administrateur MonPassRDPSecure2026! /add
-          net localgroup Administrateurs Administrateur /add
+          net user AdminRdp Pass2026! /add
+          net localgroup Administrators AdminRdp /add
+          net localgroup Administrateurs AdminRdp /add
 
       - name: Installer et configurer Ngrok
         env:
