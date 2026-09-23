@@ -1,4 +1,4 @@
-name: RDP Direct Ngrok
+name: RDP Direct Pinggy
 
 on:
   workflow_dispatch:
@@ -17,25 +17,11 @@ jobs:
           net user AdminRdp Pass2026! /add
           net localgroup Administrators AdminRdp /add
 
-      - name: Installer Ngrok
+      - name: Lancer le tunnel TCP Pinggy
         run: |
-          choco install ngrok -y
-
-      - name: Configurer et Lancer le service Ngrok
-        run: |
-          ngrok config add-authtoken 3Jk8OzXwbu4LpJD9yxXNMyNIYql_4dYAneERCH3ErGiRzNa3m
-          ngrok service install --config C:\Users\runneradmin\AppData\Local\ngrok\ngrok.yml
-          ngrok service start
-
-      - name: Ouvrir le tunnel RDP
-        run: |
-          $process = Start-Process -FilePath "ngrok.exe" -ArgumentList "tcp 3389" -PassThru -NoNewWindow
-          Start-Sleep -Seconds 12
-          $response = Invoke-RestMethod -Uri http://127.0.0.1:4040/api/tunnels
-          $publicUrl = $response.tunnels[0].public_url
-          Write-Host "=========================================="
-          Write-Host "VOTRE ADRESSE RDP : $publicUrl"
-          Write-Host "=========================================="
+          ssh -o StrictHostKeyChecking=no -p 443 -R 0:localhost:3389 tcp@a.pinggy.io > pinggy.log 2>&1 &
+          Start-Sleep -Seconds 10
+          Get-Content pinggy.log
 
       - name: Maintien du serveur actif (6h)
         run: |
