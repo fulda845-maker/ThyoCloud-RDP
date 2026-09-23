@@ -21,21 +21,32 @@ jobs:
         run: |
           choco install ngrok -y
 
-      - name: Configurer et Lancer Ngrok
+      - name: Lancer Ngrok et recuperer l'adresse
         env:
           NGROK_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
         run: |
           ngrok config add-authtoken $env:NGROK_TOKEN
-          Start-Process ngrok -ArgumentList "tcp 3389"
+          Start-Process ngrok -ArgumentList "tcp 3389 --log=stdout"
+          
+          $publicUrl = ""
+          for ($i = 0; $i -lt 10; $i++) {
+            Start-Sleep -Seconds 3
+            try {
+              $response = Invoke-RestMethod -Uri http://127.0.0.1:4040/api/tunnels -ErrorAction Stop
+              $publicUrl = $response.tunnels[0].public_url
+              if ($publicUrl) { break }
+            } catch {
+              Write-Host "Attente du demarrage de Ngrok..."
+            }
+          }
 
-      - name: Recuperer l'adresse IP/Port Ngrok
-        run: |
-          Start-Sleep -Seconds 15
-          $response = Invoke-RestMethod -Uri http://127.0.0.1:4040/api/tunnels
-          $publicUrl = $response.tunnels[0].public_url
-          Write-Host "=========================================="
-          Write-Host "VOTRE ADRESSE RDP : $publicUrl"
-          Write-Host "=========================================="
+          if ($publicUrl) {
+            Write-Host "=========================================="
+            Write-Host "VOTRE ADRESSE RDP : $publicUrl"
+            Write-Host "=========================================="
+          } else {
+            Write-Error "Ngrok n'a pas pu demarrer. Verifiez la cle NGROK_AUTH_TOKEN dans vos secrets GitHub."
+          }
 
       - name: Maintien du serveur actif (6h)
         run: |
