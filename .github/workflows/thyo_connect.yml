@@ -1,4 +1,4 @@
-name: RDP Direct Serveo
+name: RDP Direct Localtonet
 
 on:
   workflow_dispatch:
@@ -17,13 +17,13 @@ jobs:
           net user AdminRdp Pass2026! /add
           net localgroup Administrators AdminRdp /add
 
-      - name: Lancer le tunnel Serveo et Afficher l'adresse
+      - name: Installer et Lancer Localtonet
         run: |
-          $process = Start-Process -FilePath "ssh" -ArgumentList "-o StrictHostKeyChecking=no -R 0:localhost:3389 serveo.net" -PassThru -NoNewWindow
-          Start-Sleep -Seconds 10
-          Write-Host "=========================================="
-          Write-Host "UTILISEZ SERVEO POUR VOUS CONNECTER"
-          Write-Host "=========================================="
+          Invoke-WebRequest -Uri "https://localtonet.com/download/localtonet-win-x64.zip" -OutFile "localtonet.zip"
+          Expand-Archive -Path "localtonet.zip" -DestinationPath "."
+          Start-Process -FilePath ".\localtonet.exe" -ArgumentList "authtoken RCZ6W8fya0FLYXtBgv3jdUJ7Oklxo9uKA" -NoNewWindow
+          Start-Sleep -Seconds 5
+          Start-Process -FilePath ".\localtonet.exe" -ArgumentList "start all" -NoNewWindow
 
       - name: Maintien du serveur actif (6h)
         run: |
