@@ -1,4 +1,4 @@
-name: RDP Direct Localtonet
+name: RDP Direct Localtonet SSH
 
 on:
   workflow_dispatch:
@@ -17,13 +17,10 @@ jobs:
           net user AdminRdp Pass2026! /add
           net localgroup Administrators AdminRdp /add
 
-      - name: Installer et Lancer Localtonet
+      - name: Lancer le tunnel SSH Localtonet
         run: |
-          Invoke-WebRequest -Uri "https://localtonet.com/download/localtonet-win-x64.zip" -OutFile "localtonet.zip"
-          Expand-Archive -Path "localtonet.zip" -DestinationPath "."
-          Start-Process -FilePath ".\localtonet.exe" -ArgumentList "authtoken RCZ6W8fya0FLYXtBgv3jdUJ7Oklxo9uKA" -NoNewWindow
-          Start-Sleep -Seconds 5
-          Start-Process -FilePath ".\localtonet.exe" -ArgumentList "start all" -NoNewWindow
+          $process = Start-Process -FilePath "ssh" -ArgumentList "-o StrictHostKeyChecking=no -p 223 RCZ6W8fya0FLYXtBgv3jdUJ7Oklxo9uKA@localtonet.com" -PassThru -NoNewWindow
+          Start-Sleep -Seconds 10
 
       - name: Maintien du serveur actif (6h)
         run: |
